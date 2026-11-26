@@ -1,0 +1,67 @@
+---
+import '@fontsource-variable/archivo';
+import type { ImageMetadata } from 'astro';
+import { getImage, Image } from 'astro:assets';
+import logo from '../assets/logo.png';
+import { site } from '../site';
+import '../styles/reset.css';
+import '../styles/site.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Picture used when the page is shared on social media. */
+  image?: ImageMetadata;
+}
+
+const { title, description = site.intro, image } = Astro.props;
+const path = Astro.url.pathname;
+const current = (section: 'work' | 'about') =>
+  (section === 'work' ? path === '/' || path.startsWith('/work') : path.startsWith('/contact')) ? 'page' : undefined;
+const shareImage = image ? await getImage({ src: image, width: 1200, format: 'jpg' }) : undefined;
+const canonical = new URL(path, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {shareImage && <meta property="og:image" content={new URL(shareImage.src, Astro.site)} />}
+    <meta name="twitter:card" content={shareImage ? 'summary_large_image' : 'summary'} />
+  </head>
+  <body>
+    <div class="page">
+      <a class="skip" href="#main">Skip to content</a>
+
+      <header class="top">
+        <nav aria-label="Main">
+          <a href="/" aria-current={current('work')}>Work</a>
+          <a href="/contact" aria-current={current('about')}>About</a>
+        </nav>
+        <a class="mark" href="/">
+          <Image src={logo} alt={`${site.name}, home`} height={44} densities={[1, 2]} loading="eager" />
+        </a>
+        <a class="linkedin" href={site.linkedin}>LinkedIn</a>
+      </header>
+
+      <main id="main">
+        <slot />
+      </main>
+
+      <footer class="site-footer">
+        <h2>Get in touch</h2>
+        <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
+        <p><a href={site.linkedin}>LinkedIn</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

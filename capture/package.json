@@ -1,0 +1,17 @@
+{
+  "name": "tannaz-capture",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "test": "node --test",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "playwright-core": "1.65.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.7",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,108 @@
+/* Direction A, "Gallery": shared colours, type, header and footer. */
+
+:root {
+  --bg: #e7e6e3;
+  --frame: #d8d7d3;
+  --ink: #151515;
+  --muted: #5c5b57;
+  --line: rgb(21 21 21 / 0.14);
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --page: 1440px;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo Variable', system-ui, sans-serif;
+  font-size: 1.0625rem;
+}
+
+.page {
+  max-width: var(--page);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+a {
+  color: inherit;
+}
+a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -4rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ink);
+  color: var(--bg);
+}
+.skip:focus {
+  top: 0.75rem;
+}
+
+/* Header: menu on the left, logo in the middle, LinkedIn on the right. */
+.top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-block: 1.25rem;
+  font-size: 0.9375rem;
+}
+.top nav {
+  display: flex;
+  gap: 1.25rem;
+}
+.top nav a,
+.top .linkedin {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+.top nav a[aria-current] {
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
+.top .linkedin {
+  justify-self: end;
+}
+.top .mark img {
+  width: auto;
+  height: 44px;
+}
+
+/* Small uppercase section label with a rule above. */
+.label {
+  padding-top: 1rem;
+  margin-bottom: 2rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-footer {
+  margin-top: clamp(5rem, 12vw, 9rem);
+  padding-block: 3rem 4rem;
+  border-top: 1px solid var(--line);
+}
+.site-footer h2 {
+  margin-bottom: 1rem;
+  font-size: clamp(1.75rem, 1.2rem + 2.2vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.site-footer p {
+  margin-top: 0.25rem;
+}
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+  text-underline-offset: 0.25em;
+}

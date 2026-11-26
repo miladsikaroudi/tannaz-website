@@ -1,0 +1,193 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Site from '../../layouts/Site.astro';
+import { site } from '../../site';
+
+export async function getStaticPaths() {
+  const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+  return projects.map((project, i) => ({
+    params: { id: project.id },
+    props: { project, previous: projects[i - 1], next: projects[i + 1] },
+  }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  previous?: CollectionEntry<'projects'>;
+  next?: CollectionEntry<'projects'>;
+}
+
+const { project, previous, next } = Astro.props;
+const { Content } = await render(project);
+const { title, summary, client, collaborator, disciplines, cover } = project.data;
+---
+
+<Site title={`${title}: ${site.name}`} description={summary} image={cover}>
+  <article>
+    <header class="head">
+      <h1>{title}</h1>
+      <dl class="facts">
+        {
+          client && (
+            <div>
+              <dt>Client</dt>
+              <dd>{client}</dd>
+            </div>
+          )
+        }
+        {
+          collaborator && (
+            <div>
+              <dt>In collaboration with</dt>
+              <dd>{collaborator}</dd>
+            </div>
+          )
+        }
+        <div>
+          <dt>Work</dt>
+          <dd>{disciplines.join(', ')}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+
+  <nav class="pager" aria-label="More projects">
+    {
+      previous ? (
+        <a rel="prev" href={`/work/${previous.id}`}>
+          <span>Previous</span>
+          {previous.data.title}
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      next ? (
+        <a rel="next" href={`/work/${next.id}`}>
+          <span>Next</span>
+          {next.data.title}
+        </a>
+      ) : (
+        <span />
+      )
+    }
+  </nav>
+</Site>
+
+<style>
+  .head {
+    padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem);
+  }
+  h1 {
+    max-width: 18ch;
+    font-size: clamp(2.25rem, 1.2rem + 4vw, 4.75rem);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 3rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .facts dt {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .facts dd {
+    margin: 0.25rem 0 0;
+  }
+
+  /* The project's own text and pictures, written in Markdown. */
+  .prose {
+    max-width: 72rem;
+  }
+  .prose > :global(* + *) {
+    margin-top: 1.5rem;
+  }
+  .prose :global(p) {
+    max-width: 40rem;
+    font-size: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+    line-height: 1.6;
+  }
+  .prose :global(h2) {
+    margin-top: clamp(3rem, 7vw, 5rem);
+    font-size: clamp(1.375rem, 1.1rem + 1vw, 1.875rem);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+  .prose :global(p:has(> img)) {
+    max-width: none;
+    margin-top: clamp(2rem, 5vw, 3.5rem);
+  }
+  .prose :global(img) {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    background: var(--frame);
+  }
+  /* A caption is a line in italics straight after a picture. */
+  .prose :global(p:has(> img) + p:has(> em:only-child)) {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+  .prose :global(em) {
+    font-style: normal;
+  }
+  .prose :global(.video) {
+    margin-top: clamp(2rem, 5vw, 3.5rem);
+    aspect-ratio: 16 / 9;
+    background: var(--frame);
+  }
+  .prose :global(.video iframe) {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: clamp(4rem, 10vw, 7rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  .pager a {
+    display: block;
+    padding-block: 0.5rem;
+    font-size: clamp(1.0625rem, 1rem + 0.6vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+  .pager a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .pager a span {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pager [rel='next'] {
+    grid-column: 2;
+    text-align: right;
+  }
+</style>
