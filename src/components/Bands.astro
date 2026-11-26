@@ -1,0 +1,267 @@
+---
+// The bands of a project page, laid out as on the old Squarespace site:
+// grey or white stripes the full width of the window, each holding text, pictures or a video.
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+type Section = CollectionEntry<'projects'>['data']['sections'][number];
+type Pic = { src: ImageMetadata; alt: string; caption?: string };
+
+interface Props {
+  sections: Section[];
+}
+
+const { sections } = Astro.props;
+
+// Animated GIFs become animated WebP; AVIF would keep only the first frame.
+const formats = (src: ImageMetadata) => (src.format === 'gif' ? ['webp' as const] : ['avif' as const, 'webp' as const]);
+const widths = [480, 800, 1200, 1600, 2400];
+
+// A gallery's two columns: each picture goes into whichever column is shorter so far, as on the old site.
+function columns(pictures: Pic[]) {
+  const cols: Pic[][] = [[], []];
+  const heights = [0, 0];
+  for (const p of pictures) {
+    const i = heights[1] < heights[0] ? 1 : 0;
+    cols[i].push(p);
+    heights[i] += p.src.height / p.src.width;
+  }
+  return cols;
+}
+---
+
+{
+  sections.map((s) => (
+    <div class:list={['band', s.band, s.kind]} style={s.kind === 'photo' ? `--h: ${s.height}` : undefined}>
+      {s.kind === 'text' && (
+        <div class="text">
+          {s.text.map((p) => (
+            <p>{p}</p>
+          ))}
+        </div>
+      )}
+
+      {s.kind === 'photo' && (
+        <Picture src={s.src} alt={s.alt} formats={formats(s.src)} widths={[640, 960, 1440, 1920, 2560]} sizes="100vw" />
+      )}
+
+      {s.kind === 'beside' && (
+        <div class="split">
+          <Picture src={s.src} alt={s.alt} formats={formats(s.src)} widths={widths} sizes="(min-width: 768px) 45vw, 100vw" />
+          <div class="words">
+            {s.text.map((p) => (
+              <p>{p}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {s.kind === 'pictures' && (
+        <div class:list={['row', { wide: s.wide || s.pictures.length > 1, stagger: s.stagger }]}>
+          {s.pictures.map((p) => (
+            <figure>
+              <Picture
+                src={p.src}
+                alt={p.alt}
+                formats={formats(p.src)}
+                widths={widths}
+                sizes={s.pictures.length > 1 ? '(min-width: 768px) 48vw, 100vw' : s.wide ? '100vw' : '(min-width: 768px) 75vw, 100vw'}
+                style={`max-width: min(100%, ${p.src.width}px)`}
+              />
+              {p.caption && <figcaption>{p.caption}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      )}
+
+      {s.kind === 'gallery' && (
+        <div class="masonry">
+          {columns(s.pictures).map((col) => (
+            <div>
+              {col.map((p) => (
+                <figure>
+                  <Picture src={p.src} alt={p.alt} formats={formats(p.src)} widths={widths} sizes="(min-width: 640px) 46vw, 100vw" />
+                  {p.caption && <figcaption>{p.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {s.kind === 'video' && (
+        <div class="split video-split">
+          <div class="video">
+            <iframe src={s.embed} title={`${s.title} (video)`} loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen />
+          </div>
+          <div class="words">
+            <h2>{s.title}</h2>
+            {s.text.map((p) => (
+              <p>{p}</p>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  ))
+}
+
+<style>
+  /* Each band is as wide as the window; its contents stay within the page width. */
+  .band {
+    --band: #fff;
+    position: relative;
+    isolation: isolate;
+    padding-block: clamp(2.5rem, 6.6vw, 6rem);
+  }
+  .band::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    left: 50%;
+    width: 100vw;
+    translate: -50% 0;
+    background: var(--band);
+  }
+  .grey {
+    --band: var(--bg);
+  }
+
+  .band :global(picture) {
+    display: block;
+  }
+  .band :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+  figure {
+    margin: 0;
+  }
+  figcaption {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .text {
+    max-width: 44rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .text p + p {
+    margin-top: 1em;
+  }
+
+  /* A photo filling the band, cropped to the band's height. */
+  .photo {
+    height: min(calc(var(--h) * 1vh), 75vw);
+    padding: 0;
+  }
+  .photo :global(picture) {
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    width: 100vw;
+    max-width: none;
+    translate: -50% 0;
+  }
+  .photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* A picture, or a video, with its text beside it. */
+  .split {
+    display: grid;
+    gap: 1.75rem;
+    align-items: center;
+  }
+  /* Transparent pictures beside text sat on a grey box on the old pages. */
+  .split > :global(picture) {
+    background: var(--frame);
+  }
+  .words {
+    max-width: 34rem;
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+    line-height: 1.55;
+  }
+  .words p + p {
+    margin-top: 0.15em;
+  }
+  .words h2 {
+    margin-bottom: 0.6em;
+    font-size: clamp(1.375rem, 1.1rem + 1vw, 1.875rem);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+  @media (min-width: 768px) {
+    .split {
+      grid-template-columns: 45fr 55fr;
+      gap: 0;
+    }
+    .split .words {
+      max-width: calc(18% + 32rem);
+      padding-left: 18%;
+    }
+    .video-split {
+      grid-template-columns: 7fr 5fr;
+      align-items: start;
+    }
+    .video-split .words {
+      max-width: none;
+      padding-left: 2.5rem;
+    }
+  }
+
+  .video {
+    aspect-ratio: 16 / 9;
+    background: var(--frame);
+  }
+  .video iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /* One picture in the middle, or two side by side. */
+  .row {
+    display: grid;
+    gap: 2rem;
+    width: 100%;
+    margin-inline: auto;
+  }
+  @media (min-width: 768px) {
+    .row:not(.wide) {
+      width: 75%;
+    }
+    .row:has(figure + figure) {
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5%;
+      align-items: start;
+    }
+    .stagger figure + figure {
+      margin-top: clamp(2rem, 4.7vw, 4.25rem);
+    }
+  }
+
+  /* Pictures in two columns, each column stacked on its own. */
+  .masonry {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+  }
+  .masonry > div {
+    display: grid;
+    gap: inherit;
+    align-content: start;
+  }
+  @media (min-width: 640px) {
+    .masonry {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

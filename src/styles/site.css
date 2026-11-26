@@ -15,6 +15,11 @@
   font-size: 1.0625rem;
 }
 
+/* Project bands reach the edges of the window; this stops them adding a sideways scroll. */
+body {
+  overflow-x: clip;
+}
+
 .page {
   max-width: var(--page);
   min-height: 100vh;
